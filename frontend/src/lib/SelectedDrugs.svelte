@@ -30,8 +30,11 @@
   {:else}
     <div class="chips">
       {#each $selectedDrugs as drug (drug.itemSeq)}
-        <span class="chip">
+        <span class="chip" class:chip-unmapped={!drug.hasDurData}>
           {drug.itemName}
+          {#if !drug.hasDurData}
+            <span class="chip-tag">DUR 미등록</span>
+          {/if}
           <button class="chip-remove" onclick={() => removeDrug(drug.itemSeq)} aria-label="제거">&times;</button>
         </span>
       {/each}
@@ -94,6 +97,13 @@
     line-height: 1;
   }
   .chip-remove:hover { background: rgba(255,255,255,0.5); }
+  .chip-unmapped { background: var(--text-muted); }
+  .chip-tag {
+    font-size: 10px;
+    padding: 1px 4px;
+    border-radius: 3px;
+    background: rgba(255,255,255,0.3);
+  }
 
   .check-btn {
     width: 100%;

@@ -58,8 +58,13 @@ export async function checkRoutes(app: FastifyInstance) {
       }
     }
 
+    // 미매핑 약 목록
+    const unmappedDrugs = drugs
+      .filter((d) => d.ingredientCodes.length === 0)
+      .map((d) => ({ itemSeq: d.itemSeq, itemName: d.itemName }));
+
     if (ingredientPairs.length === 0) {
-      return { pairs: [], summary: { danger: 0, caution: 0, safe: 0 } };
+      return { pairs: [], summary: { danger: 0, caution: 0, safe: 0 }, unmappedDrugs };
     }
 
     // 3. contraindications 테이블에서 매칭
@@ -129,6 +134,7 @@ export async function checkRoutes(app: FastifyInstance) {
     return {
       pairs,
       summary: { danger: dangerCount, caution: cautionCount, safe: safeCount },
+      unmappedDrugs,
     };
   });
 }

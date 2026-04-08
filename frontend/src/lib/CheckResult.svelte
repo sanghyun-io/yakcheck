@@ -24,6 +24,15 @@
       </div>
     </div>
 
+    <!-- Unmapped drugs warning -->
+    {#if $checkResult.unmappedDrugs?.length > 0}
+      <div class="unmapped-warning">
+        <strong>DUR 미등록 약:</strong>
+        {$checkResult.unmappedDrugs.map(d => d.itemName).join(', ')}
+        <p>위 약은 DUR 병용금기 데이터가 등록되지 않아 교차 검사가 제한됩니다.</p>
+      </div>
+    {/if}
+
     <!-- Pair cards -->
     {#if $checkResult.pairs.length === 0}
       <div class="no-issues">
@@ -57,6 +66,18 @@
 
 <style>
   .results { margin-top: 8px; }
+
+  .unmapped-warning {
+    background: var(--warning-bg);
+    border: 1px solid var(--warning-border);
+    border-radius: var(--radius);
+    padding: 12px 16px;
+    margin-bottom: 16px;
+    font-size: 14px;
+    color: var(--text);
+  }
+  .unmapped-warning strong { color: var(--warning); }
+  .unmapped-warning p { margin: 6px 0 0; font-size: 13px; color: var(--text-muted); }
 
   .summary {
     display: flex;

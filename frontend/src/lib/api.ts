@@ -17,6 +17,7 @@ export interface DrugSearchItem {
   itemName: string;
   entpName: string;
   ingredientNames: string[];
+  hasDurData: boolean;
 }
 
 export interface CheckResult {
@@ -28,6 +29,7 @@ export interface CheckResult {
     reason: string;
   }>;
   summary: { danger: number; caution: number; safe: number };
+  unmappedDrugs: Array<{ itemSeq: string; itemName: string }>;
 }
 
 export function searchDrugs(q: string): Promise<{ items: DrugSearchItem[] }> {

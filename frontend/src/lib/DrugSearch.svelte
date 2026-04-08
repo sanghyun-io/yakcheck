@@ -87,7 +87,12 @@
           class:highlighted={i === highlightIndex}
           onmousedown={() => selectDrug(drug)}
         >
-          <span class="drug-name">{drug.itemName}</span>
+          <span class="drug-name">
+            {drug.itemName}
+            {#if !drug.hasDurData}
+              <span class="no-dur-tag">DUR 미등록</span>
+            {/if}
+          </span>
           <span class="drug-meta">{drug.entpName}</span>
           {#if drug.ingredientNames?.length}
             <span class="drug-ingr">{drug.ingredientNames.join(', ')}</span>
@@ -155,7 +160,16 @@
   .dropdown li.highlighted .drug-ingr {
     color: rgba(255,255,255,0.8);
   }
-  .drug-name { font-weight: 500; color: var(--text-h); }
+  .drug-name { font-weight: 500; color: var(--text-h); display: flex; align-items: center; gap: 6px; }
+  .no-dur-tag {
+    font-size: 10px;
+    padding: 1px 5px;
+    border-radius: 3px;
+    background: var(--text-muted);
+    color: #fff;
+    font-weight: 600;
+    flex-shrink: 0;
+  }
   .drug-meta { font-size: 13px; color: var(--text-muted); }
   .drug-ingr { font-size: 12px; color: var(--accent); }
   .dropdown li:hover .drug-name,

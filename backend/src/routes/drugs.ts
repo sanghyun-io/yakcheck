@@ -24,6 +24,7 @@ export async function drugRoutes(app: FastifyInstance) {
         itemName: r.item_name,
         entpName: r.entp_name,
         ingredientNames: r.ingredient_names,
+        hasDurData: r.ingredient_codes != null && r.ingredient_codes.length > 0,
       })),
     };
   });
