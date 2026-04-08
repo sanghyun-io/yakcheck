@@ -24,11 +24,9 @@ export interface CheckResult {
   pairs: Array<{
     drugA: { itemSeq: string; itemName: string };
     drugB: { itemSeq: string; itemName: string };
-    severity: string;
-    type: string;
     reason: string;
   }>;
-  summary: { danger: number; caution: number; safe: number };
+  summary: { contraindicated: number; safe: number };
   unmappedDrugs: Array<{ itemSeq: string; itemName: string }>;
 }
 

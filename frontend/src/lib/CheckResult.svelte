@@ -6,16 +6,10 @@
   <div class="results">
     <!-- Summary -->
     <div class="summary">
-      {#if $checkResult.summary.danger > 0}
+      {#if $checkResult.summary.contraindicated > 0}
         <div class="summary-item danger">
-          <span class="count">{$checkResult.summary.danger}</span>
-          <span class="label">위험</span>
-        </div>
-      {/if}
-      {#if $checkResult.summary.caution > 0}
-        <div class="summary-item warning">
-          <span class="count">{$checkResult.summary.caution}</span>
-          <span class="label">주의</span>
+          <span class="count">{$checkResult.summary.contraindicated}</span>
+          <span class="label">병용금기</span>
         </div>
       {/if}
       <div class="summary-item safe">
@@ -42,18 +36,13 @@
     {:else}
       <div class="cards">
         {#each $checkResult.pairs as pair}
-          <div class="card" class:card-danger={pair.severity === 'critical'} class:card-warning={pair.severity === 'warning'}>
+          <div class="card">
             <div class="card-header">
-              <span class="severity-badge" class:badge-danger={pair.severity === 'critical'} class:badge-warning={pair.severity === 'warning'}>
-                {pair.severity === 'critical' ? '위험' : '주의'}
-              </span>
+              <span class="contra-badge">병용금기</span>
               <span class="pair-names">
                 {pair.drugA.itemName} <span class="arrow">&harr;</span> {pair.drugB.itemName}
               </span>
             </div>
-            {#if pair.type}
-              <div class="card-type">{pair.type}</div>
-            {/if}
             {#if pair.reason}
               <div class="card-reason">{pair.reason}</div>
             {/if}
@@ -92,11 +81,9 @@
     border: 1px solid;
   }
   .summary-item.danger { background: var(--danger-bg); border-color: var(--danger-border); }
-  .summary-item.warning { background: var(--warning-bg); border-color: var(--warning-border); }
   .summary-item.safe { background: var(--safe-bg); border-color: var(--safe-border); }
   .count { display: block; font-size: 28px; font-weight: 700; line-height: 1; }
   .danger .count { color: var(--danger); }
-  .warning .count { color: var(--warning); }
   .safe .count { color: var(--safe); }
   .label { font-size: 13px; color: var(--text-muted); margin-top: 4px; display: block; }
 
@@ -115,12 +102,11 @@
   .card {
     background: var(--card-bg);
     border: 1px solid var(--border);
+    border-left: 4px solid var(--danger);
     border-radius: var(--radius);
     padding: 16px;
     box-shadow: var(--shadow);
   }
-  .card-danger { border-left: 4px solid var(--danger); }
-  .card-warning { border-left: 4px solid var(--warning); }
 
   .card-header {
     display: flex;
@@ -129,18 +115,17 @@
     margin-bottom: 8px;
     flex-wrap: wrap;
   }
-  .severity-badge {
+  .contra-badge {
     padding: 2px 8px;
     border-radius: 4px;
     font-size: 12px;
     font-weight: 600;
     flex-shrink: 0;
+    background: var(--danger);
+    color: #fff;
   }
-  .badge-danger { background: var(--danger); color: #fff; }
-  .badge-warning { background: var(--warning); color: #fff; }
   .pair-names { font-weight: 500; color: var(--text-h); font-size: 15px; }
   .arrow { color: var(--text-muted); margin: 0 2px; }
 
-  .card-type { font-size: 13px; color: var(--text-muted); margin-bottom: 6px; }
   .card-reason { font-size: 14px; line-height: 1.6; color: var(--text); }
 </style>

@@ -64,7 +64,8 @@ export async function checkRoutes(app: FastifyInstance) {
       .map((d) => ({ itemSeq: d.itemSeq, itemName: d.itemName }));
 
     if (ingredientPairs.length === 0) {
-      return { pairs: [], summary: { danger: 0, caution: 0, safe: 0 }, unmappedDrugs };
+      const totalPairs = (drugs.length * (drugs.length - 1)) / 2;
+      return { pairs: [], summary: { contraindicated: 0, safe: totalPairs }, unmappedDrugs };
     }
 
     // 3. contraindications 테이블에서 매칭
@@ -73,76 +74,50 @@ export async function checkRoutes(app: FastifyInstance) {
       .filter((v, i, arr) => arr.indexOf(v) === i);
 
     const contraResult = await pool.query(
-      `SELECT ingredient_code_a, ingredient_code_b,
-              contraindication_type, severity, reason
+      `SELECT ingredient_code_a, ingredient_code_b, reason
        FROM yakcheck.contraindications
        WHERE ingredient_code_a = ANY($1) OR ingredient_code_b = ANY($1)`,
       [values],
     );
 
     // Build a lookup set for fast matching
-    const contraMap = new Map<string, { type: string; severity: string; reason: string }>();
+    const contraMap = new Map<string, string>();
     for (const row of contraResult.rows) {
       const keyFwd = `${row.ingredient_code_a}|${row.ingredient_code_b}`;
       const keyRev = `${row.ingredient_code_b}|${row.ingredient_code_a}`;
-      const val = {
-        type: row.contraindication_type,
-        severity: row.severity,
-        reason: row.reason,
-      };
-      contraMap.set(keyFwd, val);
-      contraMap.set(keyRev, val);
+      contraMap.set(keyFwd, row.reason);
+      contraMap.set(keyRev, row.reason);
     }
 
-    // 4. 결과를 약 쌍 단위로 그룹핑
+    // 4. 결과를 약 쌍 단위로 그룹핑 (약 쌍당 하나만)
     const pairResults = new Map<string, {
       drugA: { itemSeq: string; itemName: string };
       drugB: { itemSeq: string; itemName: string };
-      severity: string;
-      type: string;
       reason: string;
     }>();
 
     for (const pair of ingredientPairs) {
       const key = `${pair.codeA}|${pair.codeB}`;
-      const match = contraMap.get(key);
-      if (match) {
+      const reason = contraMap.get(key);
+      if (reason) {
         const pairKey = `${pair.drugA.itemSeq}|${pair.drugB.itemSeq}`;
-        // Keep the most severe result per drug pair
-        const existing = pairResults.get(pairKey);
-        if (!existing || severityRank(match.severity) > severityRank(existing.severity)) {
+        if (!pairResults.has(pairKey)) {
           pairResults.set(pairKey, {
             drugA: { itemSeq: pair.drugA.itemSeq, itemName: pair.drugA.itemName },
             drugB: { itemSeq: pair.drugB.itemSeq, itemName: pair.drugB.itemName },
-            severity: match.severity,
-            type: match.type,
-            reason: match.reason,
+            reason,
           });
         }
       }
     }
 
-    const pairs = Array.from(pairResults.values()).sort(
-      (a, b) => severityRank(b.severity) - severityRank(a.severity),
-    );
-
+    const pairs = Array.from(pairResults.values());
     const totalPairs = (drugs.length * (drugs.length - 1)) / 2;
-    const dangerCount = pairs.filter((p) => p.severity === 'critical').length;
-    const cautionCount = pairs.filter((p) => p.severity === 'warning').length;
-    const safeCount = totalPairs - dangerCount - cautionCount;
 
     return {
       pairs,
-      summary: { danger: dangerCount, caution: cautionCount, safe: safeCount },
+      summary: { contraindicated: pairs.length, safe: totalPairs - pairs.length },
       unmappedDrugs,
     };
   });
-}
-
-function severityRank(severity: string): number {
-  switch (severity) {
-    case 'critical': return 2;
-    case 'warning': return 1;
-    default: return 0;
-  }
 }
