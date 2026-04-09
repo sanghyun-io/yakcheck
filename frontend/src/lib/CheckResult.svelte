@@ -54,7 +54,7 @@
 {/if}
 
 <style>
-  .results { margin-top: 8px; }
+  .results { margin-top: 4px; }
 
   .unmapped-warning {
     background: var(--warning-bg);
@@ -76,8 +76,8 @@
   .summary-item {
     flex: 1;
     text-align: center;
-    padding: 14px 8px;
-    border-radius: var(--radius);
+    padding: 16px 8px;
+    border-radius: var(--radius-lg);
     border: 1px solid;
   }
   .summary-item.danger { background: var(--danger-bg); border-color: var(--danger-border); }
@@ -92,19 +92,19 @@
     padding: 32px 16px;
     background: var(--safe-bg);
     border: 1px solid var(--safe-border);
-    border-radius: var(--radius);
+    border-radius: var(--radius-lg);
     color: var(--safe);
   }
   .no-issues-icon { font-size: 36px; display: block; margin-bottom: 8px; }
-  .no-issues p { color: var(--text); }
+  .no-issues p { color: var(--text); font-size: 14px; }
 
   .cards { display: flex; flex-direction: column; gap: 12px; }
   .card {
     background: var(--card-bg);
-    border: 1px solid var(--border);
+    border: 1px solid var(--danger-border);
     border-left: 4px solid var(--danger);
     border-radius: var(--radius);
-    padding: 16px;
+    padding: 14px 16px;
     box-shadow: var(--shadow);
   }
 

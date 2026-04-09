@@ -119,7 +119,7 @@
 <style>
   .search-wrapper {
     position: relative;
-    margin-bottom: 16px;
+    margin-bottom: 20px;
   }
   .search-input-row {
     position: relative;
@@ -164,16 +164,9 @@
   }
   .dropdown li:last-child { border-bottom: none; }
   .dropdown li:hover, .dropdown li.highlighted {
-    background: var(--accent);
-    color: #fff;
+    background: var(--accent-light);
   }
-  .dropdown li:hover .drug-meta,
-  .dropdown li.highlighted .drug-meta,
-  .dropdown li:hover .drug-ingr,
-  .dropdown li.highlighted .drug-ingr {
-    color: rgba(255,255,255,0.8);
-  }
-  .drug-name { font-weight: 500; color: var(--text-h); display: flex; align-items: center; gap: 6px; }
+  .drug-name { font-weight: 500; color: var(--text-h); display: flex; align-items: center; gap: 6px; font-size: 14px; }
   .no-dur-tag {
     font-size: 10px;
     padding: 1px 5px;
@@ -197,12 +190,6 @@
     color: var(--danger);
     font-weight: 500;
   }
-  .dropdown li:hover .drug-contra-warn,
-  .dropdown li.highlighted .drug-contra-warn {
-    color: #fca5a5;
-  }
-  .drug-meta { font-size: 13px; color: var(--text-muted); }
-  .drug-ingr { font-size: 12px; color: var(--accent); }
-  .dropdown li:hover .drug-name,
-  .dropdown li.highlighted .drug-name { color: #fff; }
+  .drug-meta { font-size: 12px; color: var(--text-muted); }
+  .drug-ingr { font-size: 11px; color: var(--accent); opacity: 0.8; }
 </style>

@@ -26,7 +26,11 @@
 
 <div class="selected-area">
   {#if $selectedDrugs.length === 0}
-    <p class="empty-hint">위에서 약을 검색하여 추가하세요 (최소 2개)</p>
+    <div class="empty-hint">
+      <svg class="empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="32" height="32"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v6m3-3H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      <p>위에서 약을 검색하여 추가하세요</p>
+      <span class="empty-sub">최소 2개의 약을 선택하면 병용금기를 검사합니다</span>
+    </div>
   {:else}
     <div class="chips">
       {#each $selectedDrugs as drug (drug.itemSeq)}
@@ -61,10 +65,27 @@
   .empty-hint {
     text-align: center;
     color: var(--text-muted);
-    padding: 20px;
-    border: 2px dashed var(--border);
-    border-radius: var(--radius);
+    padding: 28px 20px;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+  }
+  .empty-hint p {
     font-size: 14px;
+    font-weight: 500;
+    color: var(--text);
+  }
+  .empty-icon {
+    color: var(--border);
+    margin-bottom: 4px;
+  }
+  .empty-sub {
+    font-size: 12px;
+    color: var(--text-muted);
   }
   .chips {
     display: flex;
@@ -78,10 +99,11 @@
     gap: 6px;
     background: var(--accent);
     color: #fff;
-    padding: 6px 10px;
+    padding: 6px 12px;
     border-radius: 20px;
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 500;
+    box-shadow: 0 1px 2px rgba(37, 99, 235, 0.2);
   }
   .chip-remove {
     background: rgba(255,255,255,0.3);
@@ -107,12 +129,17 @@
 
   .check-btn {
     width: 100%;
-    padding: 12px;
+    padding: 13px;
     background: var(--accent);
     color: #fff;
     font-weight: 600;
-    font-size: 16px;
+    font-size: 15px;
+    border-radius: var(--radius);
+    box-shadow: 0 2px 4px rgba(37, 99, 235, 0.25);
   }
-  .check-btn:hover:not(:disabled) { background: var(--accent-hover); }
-  .check-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .check-btn:hover:not(:disabled) {
+    background: var(--accent-hover);
+    box-shadow: 0 3px 8px rgba(37, 99, 235, 0.3);
+  }
+  .check-btn:disabled { opacity: 0.5; cursor: not-allowed; box-shadow: none; }
 </style>

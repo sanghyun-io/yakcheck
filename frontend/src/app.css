@@ -2,11 +2,12 @@
   --text: #374151;
   --text-h: #111827;
   --text-muted: #6b7280;
-  --bg: #f9fafb;
+  --bg: #f3f4f6;
   --card-bg: #fff;
   --border: #e5e7eb;
   --accent: #2563eb;
   --accent-hover: #1d4ed8;
+  --accent-light: #eff6ff;
   --danger: #dc2626;
   --danger-bg: #fef2f2;
   --danger-border: #fecaca;
@@ -16,11 +17,13 @@
   --safe: #059669;
   --safe-bg: #ecfdf5;
   --safe-border: #a7f3d0;
-  --shadow: 0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06);
-  --shadow-lg: 0 4px 6px rgba(0,0,0,0.07), 0 10px 15px rgba(0,0,0,0.1);
-  --radius: 8px;
+  --shadow: 0 1px 2px rgba(0,0,0,0.05);
+  --shadow-md: 0 2px 8px rgba(0,0,0,0.08);
+  --shadow-lg: 0 4px 12px rgba(0,0,0,0.1);
+  --radius: 10px;
+  --radius-lg: 14px;
 
-  font: 16px/1.5 system-ui, -apple-system, sans-serif;
+  font: 16px/1.5 'Pretendard Variable', Pretendard, system-ui, -apple-system, sans-serif;
   color: var(--text);
   background: var(--bg);
 }
@@ -30,17 +33,19 @@
     --text: #d1d5db;
     --text-h: #f3f4f6;
     --text-muted: #9ca3af;
-    --bg: #111827;
-    --card-bg: #1f2937;
-    --border: #374151;
+    --bg: #0f172a;
+    --card-bg: #1e293b;
+    --border: #334155;
+    --accent-light: #1e3a5f;
     --danger-bg: #1c1917;
     --danger-border: #7f1d1d;
     --warning-bg: #1c1917;
     --warning-border: #78350f;
     --safe-bg: #022c22;
     --safe-border: #064e3b;
-    --shadow: 0 1px 3px rgba(0,0,0,0.3);
-    --shadow-lg: 0 4px 6px rgba(0,0,0,0.3);
+    --shadow: 0 1px 2px rgba(0,0,0,0.3);
+    --shadow-md: 0 2px 8px rgba(0,0,0,0.4);
+    --shadow-lg: 0 4px 12px rgba(0,0,0,0.5);
   }
 }
 
@@ -49,10 +54,12 @@
 body { margin: 0; }
 
 #app {
-  max-width: 680px;
+  max-width: 580px;
   margin: 0 auto;
-  padding: 24px 16px 80px;
-  min-height: 100vh;
+  padding: 0 16px 80px;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
 }
 
 button {
@@ -68,12 +75,15 @@ input {
   font: inherit;
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 10px 14px;
+  padding: 11px 14px;
   background: var(--card-bg);
   color: var(--text-h);
   outline: none;
   width: 100%;
-  transition: border-color 0.15s;
+  transition: border-color 0.15s, box-shadow 0.15s;
 }
-input:focus { border-color: var(--accent); }
+input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
 input::placeholder { color: var(--text-muted); }

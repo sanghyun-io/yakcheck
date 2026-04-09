@@ -196,7 +196,7 @@
     display: flex;
     flex-direction: column;
     gap: 10px;
-    margin-bottom: 16px;
+    margin-bottom: 20px;
   }
   .form-row {
     display: flex;
@@ -218,13 +218,17 @@
     font: inherit;
     border: 1px solid var(--border);
     border-radius: var(--radius);
-    padding: 9px 12px;
+    padding: 10px 12px;
     background: var(--card-bg);
     color: var(--text-h);
     outline: none;
     width: 100%;
+    transition: border-color 0.15s, box-shadow 0.15s;
   }
-  select:focus { border-color: var(--accent); }
+  select:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+  }
 
   .btn-row {
     display: flex;
@@ -233,14 +237,18 @@
   }
   .search-btn {
     flex: 1;
-    padding: 10px;
+    padding: 11px;
     background: var(--accent);
     color: #fff;
     font-weight: 600;
     font-size: 15px;
+    box-shadow: 0 2px 4px rgba(37, 99, 235, 0.25);
   }
-  .search-btn:hover:not(:disabled) { background: var(--accent-hover); }
-  .search-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .search-btn:hover:not(:disabled) {
+    background: var(--accent-hover);
+    box-shadow: 0 3px 8px rgba(37, 99, 235, 0.3);
+  }
+  .search-btn:disabled { opacity: 0.5; cursor: not-allowed; box-shadow: none; }
   .reset-btn {
     padding: 10px 16px;
     background: var(--card-bg);
@@ -252,11 +260,12 @@
 
   .no-result {
     text-align: center;
-    padding: 24px;
+    padding: 28px;
     color: var(--text-muted);
     font-size: 14px;
-    border: 2px dashed var(--border);
-    border-radius: var(--radius);
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
   }
   .result-count {
     font-size: 13px;
@@ -278,13 +287,16 @@
     border: 1px solid var(--border);
     border-radius: var(--radius);
     padding: 12px;
-    box-shadow: var(--shadow);
+    transition: box-shadow 0.15s;
+  }
+  .pill-card:hover {
+    box-shadow: var(--shadow-md);
   }
   .pill-img {
-    width: 72px;
-    height: 72px;
+    width: 64px;
+    height: 64px;
     object-fit: contain;
-    border-radius: 6px;
+    border-radius: 8px;
     background: var(--bg);
     flex-shrink: 0;
   }
@@ -326,8 +338,8 @@
   }
 
   .add-btn {
-    width: 36px;
-    height: 36px;
+    width: 32px;
+    height: 32px;
     flex-shrink: 0;
     display: flex;
     align-items: center;
@@ -335,16 +347,18 @@
     background: var(--accent);
     color: #fff;
     border-radius: 50%;
-    font-size: 20px;
+    font-size: 18px;
     font-weight: 700;
     padding: 0;
     line-height: 1;
+    box-shadow: 0 1px 3px rgba(37, 99, 235, 0.2);
   }
   .add-btn:hover:not(:disabled) { background: var(--accent-hover); }
   .add-btn:disabled {
     background: var(--safe);
     cursor: default;
-    font-size: 16px;
+    font-size: 14px;
+    box-shadow: none;
   }
 
   @media (max-width: 480px) {

@@ -104,7 +104,9 @@
 
   {#if $myDrugs.length === 0}
     <div class="empty">
+      <svg class="empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="32" height="32"><path stroke-linecap="round" stroke-linejoin="round" d="M9.75 3.104v5.714a2.25 2.25 0 01-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 014.5 0m0 0v5.714c0 .597.237 1.17.659 1.591L19.8 15.3M14.25 3.104c.251.023.501.05.75.082M19.8 15.3l-1.57.393A9.065 9.065 0 0112 15a9.065 9.065 0 00-6.23.693L5 14.5m14.8.8l1.402 1.402c1.232 1.232.65 3.318-1.067 3.611A48.309 48.309 0 0112 21c-2.773 0-5.491-.235-8.135-.687-1.718-.293-2.3-2.379-1.067-3.61L5 14.5"/></svg>
       <p>등록된 약이 없습니다</p>
+      <span class="empty-sub">위에서 약을 검색하여 등록하세요</span>
     </div>
   {:else}
     <div class="drug-list">
@@ -180,17 +182,10 @@
   }
   .dropdown li:last-child { border-bottom: none; }
   .dropdown li:hover, .dropdown li.highlighted {
-    background: var(--accent);
-    color: #fff;
+    background: var(--accent-light);
   }
   .dropdown li.already-added { opacity: 0.5; }
-  .dropdown li:hover .drug-meta,
-  .dropdown li.highlighted .drug-meta,
-  .dropdown li:hover .drug-ingr,
-  .dropdown li.highlighted .drug-ingr {
-    color: rgba(255,255,255,0.8);
-  }
-  .drug-name { font-weight: 500; color: var(--text-h); display: flex; align-items: center; gap: 6px; }
+  .drug-name { font-weight: 500; color: var(--text-h); display: flex; align-items: center; gap: 6px; font-size: 14px; }
   .added-tag {
     font-size: 10px;
     padding: 1px 5px;
@@ -199,18 +194,33 @@
     color: #fff;
     font-weight: 600;
   }
-  .drug-meta { font-size: 13px; color: var(--text-muted); }
-  .drug-ingr { font-size: 12px; color: var(--accent); }
-  .dropdown li:hover .drug-name,
-  .dropdown li.highlighted .drug-name { color: #fff; }
+  .drug-meta { font-size: 12px; color: var(--text-muted); }
+  .drug-ingr { font-size: 11px; color: var(--accent); opacity: 0.8; }
 
   .empty {
     text-align: center;
-    padding: 24px;
+    padding: 28px 20px;
     color: var(--text-muted);
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+  }
+  .empty p {
     font-size: 14px;
-    border: 2px dashed var(--border);
-    border-radius: var(--radius);
+    font-weight: 500;
+    color: var(--text);
+  }
+  .empty-icon {
+    color: var(--border);
+    margin-bottom: 4px;
+  }
+  .empty-sub {
+    font-size: 12px;
+    color: var(--text-muted);
   }
 
   .drug-list {
@@ -226,6 +236,10 @@
     border: 1px solid var(--border);
     border-radius: var(--radius);
     padding: 12px 14px;
+    transition: box-shadow 0.15s;
+  }
+  .drug-item:hover {
+    box-shadow: var(--shadow-md);
   }
   .drug-item-info {
     flex: 1;
