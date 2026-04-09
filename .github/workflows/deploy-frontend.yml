@@ -3,7 +3,7 @@ name: Deploy Frontend to Cloudflare Pages
 on:
   push:
     branches: [main]
-    paths: ['frontend/**']
+    paths: ['frontend/**', '.github/workflows/deploy-frontend.yml']
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
