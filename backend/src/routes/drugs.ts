@@ -10,7 +10,7 @@ export async function drugRoutes(app: FastifyInstance) {
     }
 
     const result = await pool.query(
-      `SELECT item_seq, item_name, entp_name, ingredient_names
+      `SELECT item_seq, item_name, entp_name, ingredient_names, ingredient_codes
        FROM yakcheck.drugs
        WHERE item_name ILIKE '%' || $1 || '%'
        ORDER BY similarity(item_name, $1) DESC
