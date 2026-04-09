@@ -1,0 +1,75 @@
+name: Deploy Backend to OCI
+
+on:
+  push:
+    branches: [main]
+    paths: ['backend/**']
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    name: Deploy Backend
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: backend
+        run: npm ci
+
+      - name: Build TypeScript
+        working-directory: backend
+        run: npm run build
+
+      - name: Remove devDependencies
+        working-directory: backend
+        run: npm ci --omit=dev
+
+      - name: Create tarball
+        working-directory: backend
+        run: |
+          tar czf /tmp/yakcheck-backend.tar.gz \
+            --exclude='.env' \
+            --exclude='node_modules/.cache' \
+            --exclude='scripts' \
+            package.json package-lock.json dist/ node_modules/
+
+      - name: Setup SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.OCI_SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H ${{ secrets.OCI_API_HOST }} >> ~/.ssh/known_hosts 2>/dev/null
+
+      - name: Upload and deploy
+        env:
+          API_HOST: ${{ secrets.OCI_API_HOST }}
+        run: |
+          scp -i ~/.ssh/deploy_key /tmp/yakcheck-backend.tar.gz ubuntu@$API_HOST:/tmp/yakcheck-backend.tar.gz
+
+          ssh -i ~/.ssh/deploy_key ubuntu@$API_HOST bash -s <<'REMOTE'
+          set -euo pipefail
+          REMOTE_DIR="/opt/yakcheck/backend"
+          SERVICE_NAME="yakcheck-backend"
+
+          cd $REMOTE_DIR
+          sudo tar xzf /tmp/yakcheck-backend.tar.gz --strip-components=0
+          sudo chown -R ubuntu:ubuntu $REMOTE_DIR
+          rm /tmp/yakcheck-backend.tar.gz
+
+          sudo systemctl restart $SERVICE_NAME
+          echo "Service restarted."
+          sudo systemctl status $SERVICE_NAME --no-pager || true
+          REMOTE
+
+      - name: Cleanup SSH key
+        if: always()
+        run: rm -f ~/.ssh/deploy_key
