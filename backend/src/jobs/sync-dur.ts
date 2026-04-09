@@ -170,17 +170,129 @@ async function syncDurExtraOperations() {
   return totalUpserted;
 }
 
+/**
+ * 허가정보 API(getDrugPrdtMcpnDtlInq07)에서 미커버 D-code 성분만 대상으로
+ * 원료명 매칭하여 drugs.ingredient_codes 보강.
+ * 전량 수집이 아닌, 미커버 성분명으로 허가목록 검색 → 주성분 상세 조회.
+ */
+async function syncPrmsnInfoIngredients() {
+  console.log('[sync] 허가정보 원료명 매핑 시작');
+
+  // 미커버 D-code 추출
+  const missingResult = await pool.query(`
+    WITH drug_dcodes AS (
+      SELECT DISTINCT unnest(ingredient_codes) AS dcode
+      FROM yakcheck.drugs WHERE ingredient_codes IS NOT NULL
+    )
+    SELECT DISTINCT dcode, name FROM (
+      SELECT ingredient_code_a AS dcode, ingredient_name_a AS name FROM yakcheck.contraindications
+      UNION
+      SELECT ingredient_code_b AS dcode, ingredient_name_b AS name FROM yakcheck.contraindications
+    ) t
+    WHERE dcode NOT IN (SELECT dcode FROM drug_dcodes)
+      AND name IS NOT NULL AND name != ''
+  `);
+
+  if (missingResult.rows.length === 0) {
+    console.log('[sync] 미커버 D-code 없음 — 스킵');
+    return 0;
+  }
+
+  const missingDcodes = new Map<string, string>();
+  for (const row of missingResult.rows) {
+    missingDcodes.set(row.dcode, row.name);
+  }
+  console.log(`[sync] 미커버 D-code: ${missingDcodes.size}개`);
+
+  // 각 미커버 성분명으로 허가목록 검색 → item_seq 수집
+  const BASE_LIST = `https://apis.data.go.kr/1471000/DrugPrdtPrmsnInfoService07/getDrugPrdtPrmsnInq07`;
+  const BASE_MCPN = `https://apis.data.go.kr/1471000/DrugPrdtPrmsnInfoService07/getDrugPrdtMcpnDtlInq07`;
+  const checkedItemSeqs = new Set<string>();
+  let totalUpserted = 0;
+
+  for (const [dcode, ingrName] of missingDcodes) {
+    await sleep(DELAY_MS);
+    try {
+      const encoded = encodeURIComponent(ingrName);
+      const listUrl = `${BASE_LIST}?serviceKey=${API_KEY}&item_name=${encoded}&pageNo=1&numOfRows=100&type=json`;
+      const listRes = await fetch(listUrl);
+      const listData = await listRes.json();
+      const items = listData.body?.items;
+      if (!items || listData.body.totalCount === 0) continue;
+
+      const itemArr = Array.isArray(items) ? items : [items];
+
+      for (const it of itemArr) {
+        const itemSeq = it.ITEM_SEQ;
+        if (!itemSeq || checkedItemSeqs.has(itemSeq)) continue;
+        checkedItemSeqs.add(itemSeq);
+
+        // 주성분 상세에서 원료명 확인
+        await sleep(DELAY_MS);
+        const mcpnUrl = `${BASE_MCPN}?serviceKey=${API_KEY}&item_seq=${itemSeq}&type=json`;
+        const mcpnRes = await fetch(mcpnUrl);
+        const mcpnData = await mcpnRes.json();
+        const mcpnItems = mcpnData.body?.items;
+        if (!mcpnItems) continue;
+
+        const mcpnArr = Array.isArray(mcpnItems) ? mcpnItems : [mcpnItems];
+        const matchedCodes: string[] = [];
+        const matchedNames: string[] = [];
+
+        for (const mcpn of mcpnArr) {
+          const mtralNm = mcpn.MTRAL_NM;
+          if (!mtralNm) continue;
+
+          for (const [dc, nm] of missingDcodes) {
+            if (nm.length >= 2) {
+              const idx = mtralNm.indexOf(nm);
+              if (idx !== -1 && (idx === 0 || !/[가-힣]/.test(mtralNm[idx - 1]))) {
+                if (!matchedCodes.includes(dc)) {
+                  matchedCodes.push(dc);
+                  matchedNames.push(nm);
+                }
+              }
+            }
+          }
+        }
+
+        if (matchedCodes.length === 0) continue;
+
+        await pool.query(`
+          INSERT INTO yakcheck.drugs (item_seq, item_name, entp_name, ingredient_codes, ingredient_names, updated_at)
+          VALUES ($1, $2, $3, $4, $5, NOW())
+          ON CONFLICT (item_seq) DO UPDATE SET
+            ingredient_codes = (SELECT ARRAY(SELECT DISTINCT unnest(
+              COALESCE(yakcheck.drugs.ingredient_codes, ARRAY[]::text[]) || $4
+            ))),
+            ingredient_names = (SELECT ARRAY(SELECT DISTINCT unnest(
+              COALESCE(yakcheck.drugs.ingredient_names, ARRAY[]::text[]) || $5
+            ))),
+            updated_at = NOW()
+        `, [itemSeq, it.ITEM_NAME || '', it.ENTP_NAME || '', matchedCodes, matchedNames]);
+        totalUpserted++;
+      }
+    } catch (err: any) {
+      // 개별 성분 실패는 무시하고 계속 진행
+    }
+  }
+
+  console.log(`[sync] 허가정보 원료명 매핑: ${totalUpserted}건 upsert`);
+  return totalUpserted;
+}
+
 export async function runSync() {
   const startedAt = new Date();
   try {
     const durCount = await syncDurContraindications();
     const drugCount = await syncDrugInfo();
     const extraCount = await syncDurExtraOperations();
+    const prmsnCount = await syncPrmsnInfoIngredients();
 
     await pool.query(
       `INSERT INTO yakcheck.sync_logs (sync_type, status, records_affected, started_at, finished_at)
        VALUES ('daily_sync', 'success', $1, $2, NOW())`,
-      [durCount + drugCount + extraCount, startedAt],
+      [durCount + drugCount + extraCount + prmsnCount, startedAt],
     );
     console.log('[sync] 동기화 완료');
   } catch (err: any) {
