@@ -18,8 +18,8 @@ export async function checkRoutes(app: FastifyInstance) {
     if (!drugIds || !Array.isArray(drugIds) || drugIds.length < 2) {
       return reply.status(400).send({ error: '최소 2개의 약을 선택해야 합니다.' });
     }
-    if (drugIds.length > 10) {
-      return reply.status(400).send({ error: '최대 10개까지 선택 가능합니다.' });
+    if (drugIds.length > 30) {
+      return reply.status(400).send({ error: '최대 30개까지 선택 가능합니다.' });
     }
 
     // 1. 각 약의 성분 코드 조회
