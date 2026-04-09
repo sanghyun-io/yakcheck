@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { identifyPill, getIdentifyOptions, type IdentifyItem, type FilterOption } from './api';
-  import { selectedDrugs } from './stores';
+  import { selectedDrugs, myDrugs, myDrugContraMap, checkAgainstMyDrugs } from './stores';
 
   let shapes = $state<FilterOption[]>([]);
   let colors = $state<FilterOption[]>([]);
@@ -46,6 +46,10 @@
       const data = await identifyPill(params);
       results = data.items;
       totalCount = data.totalCount;
+
+      if ($myDrugs.length > 0 && results.length > 0) {
+        checkAgainstMyDrugs(results.map((d) => ({ itemSeq: d.itemSeq, itemName: d.itemName })));
+      }
     } catch {
       results = [];
       totalCount = 0;
@@ -143,7 +147,7 @@
     <p class="result-count">총 {totalCount.toLocaleString()}건 중 {results.length}건 표시</p>
     <div class="pill-list">
       {#each results as item (item.itemSeq)}
-        <div class="pill-card">
+        <div class="pill-card" class:pill-card-danger={$myDrugContraMap.has(item.itemSeq)}>
           {#if item.imageUrl}
             <img src={item.imageUrl} alt={item.itemName} class="pill-img" loading="lazy" />
           {:else}
@@ -162,6 +166,11 @@
             </span>
             {#if item.ingredientNames.length > 0}
               <span class="pill-ingr">{item.ingredientNames.join(', ')}</span>
+            {/if}
+            {#if $myDrugContraMap.has(item.itemSeq)}
+              <span class="pill-contra-warn">
+                {$myDrugContraMap.get(item.itemSeq)?.map(c => c.myDrugName).join(', ')}과(와) 병용금기
+              </span>
             {/if}
           </div>
           <button
@@ -306,6 +315,15 @@
   .pill-class { font-size: 11px; color: var(--accent); }
   .pill-detail { font-size: 11px; color: var(--text-muted); }
   .pill-ingr { font-size: 11px; color: var(--accent); }
+  .pill-contra-warn {
+    font-size: 11px;
+    color: var(--danger);
+    font-weight: 600;
+  }
+  .pill-card-danger {
+    border-color: var(--danger);
+    border-left: 4px solid var(--danger);
+  }
 
   .add-btn {
     width: 36px;

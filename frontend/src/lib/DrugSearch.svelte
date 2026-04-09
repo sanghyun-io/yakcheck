@@ -1,6 +1,6 @@
 <script lang="ts">
   import { searchDrugs, type DrugSearchItem } from './api';
-  import { selectedDrugs } from './stores';
+  import { selectedDrugs, myDrugs, myDrugContraMap, checkAgainstMyDrugs } from './stores';
 
   let query = $state('');
   let results = $state<DrugSearchItem[]>([]);
@@ -23,6 +23,11 @@
         const data = await searchDrugs(query);
         results = data.items;
         showDropdown = results.length > 0;
+
+        // 내 약이 등록되어 있으면 검색 결과와 자동 비교
+        if ($myDrugs.length > 0 && results.length > 0) {
+          checkAgainstMyDrugs(results.map((d) => ({ itemSeq: d.itemSeq, itemName: d.itemName })));
+        }
       } catch {
         results = [];
       } finally {
@@ -92,8 +97,16 @@
             {#if !drug.hasDurData}
               <span class="no-dur-tag">DUR 미등록</span>
             {/if}
+            {#if $myDrugContraMap.has(drug.itemSeq)}
+              <span class="contra-tag">내 약 금기</span>
+            {/if}
           </span>
           <span class="drug-meta">{drug.entpName}</span>
+          {#if $myDrugContraMap.has(drug.itemSeq)}
+            <span class="drug-contra-warn">
+              {$myDrugContraMap.get(drug.itemSeq)?.map(c => c.myDrugName).join(', ')}과(와) 병용금기
+            </span>
+          {/if}
           {#if drug.ingredientNames?.length}
             <span class="drug-ingr">{drug.ingredientNames.join(', ')}</span>
           {/if}
@@ -169,6 +182,24 @@
     color: #fff;
     font-weight: 600;
     flex-shrink: 0;
+  }
+  .contra-tag {
+    font-size: 10px;
+    padding: 1px 5px;
+    border-radius: 3px;
+    background: var(--danger);
+    color: #fff;
+    font-weight: 600;
+    flex-shrink: 0;
+  }
+  .drug-contra-warn {
+    font-size: 12px;
+    color: var(--danger);
+    font-weight: 500;
+  }
+  .dropdown li:hover .drug-contra-warn,
+  .dropdown li.highlighted .drug-contra-warn {
+    color: #fca5a5;
   }
   .drug-meta { font-size: 13px; color: var(--text-muted); }
   .drug-ingr { font-size: 12px; color: var(--accent); }

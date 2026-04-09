@@ -1,10 +1,12 @@
 <script lang="ts">
   import DrugSearch from './lib/DrugSearch.svelte';
   import PillIdentify from './lib/PillIdentify.svelte';
+  import MyDrugs from './lib/MyDrugs.svelte';
   import SelectedDrugs from './lib/SelectedDrugs.svelte';
   import CheckResult from './lib/CheckResult.svelte';
+  import { myDrugs } from './lib/stores';
 
-  let activeTab = $state<'search' | 'identify'>('search');
+  let activeTab = $state<'search' | 'identify' | 'mydrugs'>('search');
 </script>
 
 <header>
@@ -20,16 +22,23 @@
     <button class="tab" class:active={activeTab === 'identify'} onclick={() => activeTab = 'identify'}>
       낱알 식별
     </button>
+    <button class="tab" class:active={activeTab === 'mydrugs'} onclick={() => activeTab = 'mydrugs'}>
+      내 약{#if $myDrugs.length > 0}<span class="tab-badge">{$myDrugs.length}</span>{/if}
+    </button>
   </div>
 
   {#if activeTab === 'search'}
     <DrugSearch />
-  {:else}
+  {:else if activeTab === 'identify'}
     <PillIdentify />
+  {:else}
+    <MyDrugs />
   {/if}
 
-  <SelectedDrugs />
-  <CheckResult />
+  {#if activeTab !== 'mydrugs'}
+    <SelectedDrugs />
+    <CheckResult />
+  {/if}
 </main>
 
 <footer>
@@ -77,6 +86,23 @@
   .tab.active {
     background: var(--accent);
     color: #fff;
+  }
+  .tab-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    border-radius: 9px;
+    font-size: 11px;
+    font-weight: 700;
+    margin-left: 4px;
+    background: var(--danger);
+    color: #fff;
+  }
+  .tab.active .tab-badge {
+    background: rgba(255,255,255,0.3);
   }
   footer {
     margin-top: 48px;
