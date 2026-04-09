@@ -5,6 +5,9 @@ on:
     branches: [main]
     paths: ['backend/**']
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -17,7 +20,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
           cache: 'npm'
           cache-dependency-path: backend/package-lock.json
 
@@ -68,7 +71,26 @@ jobs:
           sudo systemctl restart $SERVICE_NAME
           echo "Service restarted."
           sudo systemctl status $SERVICE_NAME --no-pager || true
+
+          # Health check (최대 15초 대기)
+          for i in 1 2 3 4 5; do
+            sleep 3
+            if curl -sf http://127.0.0.1:4301/health > /dev/null 2>&1; then
+              echo "Health check passed."
+              exit 0
+            fi
+            echo "Health check attempt $i failed, retrying..."
+          done
+          echo "Health check failed after 15s!"
+          exit 1
           REMOTE
+
+      - name: Notify deploy failure
+        if: failure()
+        env:
+          API_HOST: ${{ secrets.OCI_API_HOST }}
+        run: |
+          echo "::error::Backend deploy failed! Check the logs above."
 
       - name: Cleanup SSH key
         if: always()

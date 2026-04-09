@@ -1,5 +1,6 @@
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
+import rateLimit from '@fastify/rate-limit';
 import 'dotenv/config';
 import { pool } from './db.js';
 import { drugRoutes } from './routes/drugs.js';
@@ -13,6 +14,11 @@ await app.register(cors, {
     'https://yakcheck.gamja.top',
     'http://localhost:5173',
   ],
+});
+
+await app.register(rateLimit, {
+  max: 60,
+  timeWindow: '1 minute',
 });
 
 app.get('/health', async () => {

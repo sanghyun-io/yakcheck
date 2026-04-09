@@ -108,16 +108,79 @@ async function syncDrugInfo() {
   return upserted;
 }
 
+const DUR_EXTRA_OPERATIONS = [
+  'getPwnmTabooInfoList03',
+  'getEfcyDplctInfoList03',
+  'getCpctyAtentInfoList03',
+  'getOdsnAtentInfoList03',
+  'getSpcifyAgrdeTabooInfoList03',
+  'getMdctnPdAtentInfoList03',
+];
+
+function xmlVal(xml: string, tag: string): string {
+  const m = xml.match(new RegExp(`<${tag}>([^<]*)</${tag}>`));
+  return m ? m[1].trim() : '';
+}
+
+async function syncDurExtraOperations() {
+  console.log('[sync] DUR 추가 오퍼레이션 약품 동기화 시작');
+  let totalUpserted = 0;
+
+  for (const op of DUR_EXTRA_OPERATIONS) {
+    try {
+      const countUrl = `https://apis.data.go.kr/1471000/DURPrdlstInfoService03/${op}?serviceKey=${API_KEY}&numOfRows=1&pageNo=1`;
+      const countRes = await fetch(countUrl);
+      const countXml = await countRes.text();
+      const totalCount = parseInt(xmlVal(countXml, 'totalCount') || '0');
+      const totalPages = Math.ceil(totalCount / 500);
+
+      for (let page = 1; page <= totalPages; page++) {
+        await sleep(DELAY_MS);
+        const url = `https://apis.data.go.kr/1471000/DURPrdlstInfoService03/${op}?serviceKey=${API_KEY}&numOfRows=500&pageNo=${page}`;
+        const res = await fetch(url);
+        const xml = await res.text();
+        if (xmlVal(xml, 'resultCode') !== '00') continue;
+
+        const items = xml.split('<item>').slice(1);
+        for (const item of items) {
+          const itemSeq = xmlVal(item, 'ITEM_SEQ');
+          const ingrCode = xmlVal(item, 'INGR_CODE');
+          if (!itemSeq || !ingrCode) continue;
+
+          await pool.query(`
+            INSERT INTO yakcheck.drugs (item_seq, item_name, entp_name, ingredient_codes, ingredient_names, updated_at)
+            VALUES ($1, $2, $3, ARRAY[$4], ARRAY[$5], NOW())
+            ON CONFLICT (item_seq) DO UPDATE SET
+              ingredient_codes = (SELECT ARRAY(SELECT DISTINCT unnest(yakcheck.drugs.ingredient_codes || ARRAY[$4]))),
+              ingredient_names = CASE
+                WHEN $5 = '' THEN yakcheck.drugs.ingredient_names
+                ELSE (SELECT ARRAY(SELECT DISTINCT unnest(COALESCE(yakcheck.drugs.ingredient_names, ARRAY[]::text[]) || ARRAY[$5])))
+              END,
+              updated_at = NOW()
+          `, [itemSeq, xmlVal(item, 'ITEM_NAME'), xmlVal(item, 'ENTP_NAME'), ingrCode, xmlVal(item, 'INGR_KOR_NAME')]);
+          totalUpserted++;
+        }
+      }
+    } catch (err: any) {
+      console.error(`[sync] ${op} 에러:`, err.message);
+    }
+  }
+
+  console.log(`[sync] DUR 추가 오퍼레이션: ${totalUpserted}건 upsert`);
+  return totalUpserted;
+}
+
 export async function runSync() {
   const startedAt = new Date();
   try {
     const durCount = await syncDurContraindications();
     const drugCount = await syncDrugInfo();
+    const extraCount = await syncDurExtraOperations();
 
     await pool.query(
       `INSERT INTO yakcheck.sync_logs (sync_type, status, records_affected, started_at, finished_at)
        VALUES ('daily_sync', 'success', $1, $2, NOW())`,
-      [durCount + drugCount, startedAt],
+      [durCount + drugCount + extraCount, startedAt],
     );
     console.log('[sync] 동기화 완료');
   } catch (err: any) {
