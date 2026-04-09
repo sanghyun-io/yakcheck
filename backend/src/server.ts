@@ -5,6 +5,7 @@ import 'dotenv/config';
 import { pool } from './db.js';
 import { drugRoutes } from './routes/drugs.js';
 import { checkRoutes } from './routes/check.js';
+import { identifyRoutes } from './routes/identify.js';
 import { scheduleSyncJob } from './jobs/sync-dur.js';
 
 const app = Fastify({ logger: true });
@@ -28,6 +29,7 @@ app.get('/health', async () => {
 
 await app.register(drugRoutes);
 await app.register(checkRoutes);
+await app.register(identifyRoutes);
 
 const port = parseInt(process.env.PORT || '4301', 10);
 

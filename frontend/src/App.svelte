@@ -1,7 +1,10 @@
 <script lang="ts">
   import DrugSearch from './lib/DrugSearch.svelte';
+  import PillIdentify from './lib/PillIdentify.svelte';
   import SelectedDrugs from './lib/SelectedDrugs.svelte';
   import CheckResult from './lib/CheckResult.svelte';
+
+  let activeTab = $state<'search' | 'identify'>('search');
 </script>
 
 <header>
@@ -10,7 +13,21 @@
 </header>
 
 <main>
-  <DrugSearch />
+  <div class="tabs">
+    <button class="tab" class:active={activeTab === 'search'} onclick={() => activeTab = 'search'}>
+      이름 검색
+    </button>
+    <button class="tab" class:active={activeTab === 'identify'} onclick={() => activeTab = 'identify'}>
+      낱알 식별
+    </button>
+  </div>
+
+  {#if activeTab === 'search'}
+    <DrugSearch />
+  {:else}
+    <PillIdentify />
+  {/if}
+
   <SelectedDrugs />
   <CheckResult />
 </main>
@@ -37,6 +54,29 @@
   }
   main {
     margin-top: 8px;
+  }
+  .tabs {
+    display: flex;
+    gap: 0;
+    margin-bottom: 16px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  .tab {
+    flex: 1;
+    padding: 10px;
+    background: var(--card-bg);
+    color: var(--text-muted);
+    font-size: 14px;
+    font-weight: 500;
+    border-radius: 0;
+    transition: background 0.15s, color 0.15s;
+  }
+  .tab:hover { background: var(--bg); }
+  .tab.active {
+    background: var(--accent);
+    color: #fff;
   }
   footer {
     margin-top: 48px;
